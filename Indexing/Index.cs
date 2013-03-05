@@ -13,7 +13,7 @@ namespace InvertedIndex.Indexing
 		IDictionary<Int32, Document> documentIDX = new Dictionary<Int32, Document>();
 
 		// this can double as the total # of documents
-		Int32 lastDocumentId = 0;
+		Int32 documentCount = 0;
 
 		[StructLayout(LayoutKind.Sequential, Pack=1)]
 		private struct TermBucket
@@ -53,13 +53,6 @@ namespace InvertedIndex.Indexing
 			{
 				return NormalizeTermFrequency(termFrequency) * GetInverseDocumentFrequency(totalDocuments);
 			}
-
-			/* where is this going to be used? Do I really need 
-			 * it if I'm not going to actually return the document 
-			 * to the user? The actual document could be returned 
-			 * via some other key-value store
-			 */
-			public Int32 Term { get { return _term; } }
 
 			/// <summary>
 			/// A list of term frequencies (tf) where the high
@@ -115,10 +108,6 @@ namespace InvertedIndex.Indexing
 				return;
 
 			/*
-			 If I store the idf with the term and the tf with each document
-			 * in the list of matching docs would I then be able to use
-			 * that to score the documents using the search terms?
-			 * 
 			 * I could omit terms with a high idf from the search
 			 * terms and maybe the index (of course how would I know
 			 * unless I kept the terms as part of the index?) - Most
@@ -135,7 +124,7 @@ namespace InvertedIndex.Indexing
 			 * see: http://www.ir-facility.org/scoring-and-ranking-techniques-tf-idf-term-weighting-and-cosine-similarity
 			 */
 			// NOTE: this is also == the total # of documents :)
-			var documentId = ++lastDocumentId;
+			var documentId = ++documentCount;
 			var doc = new Document(documentId);
 
 
@@ -184,7 +173,7 @@ namespace InvertedIndex.Indexing
 				// merge results by document id
 				var bucket = searchIDX[termId];
 
-				queryTfIdf[tokenIndex] = new Tuple<int, double>(item.Key, bucket.GetTfIdf(lastDocumentId, 1));
+				queryTfIdf[tokenIndex] = new Tuple<int, double>(item.Key, bucket.GetTfIdf(documentCount, 1));
 
 				foreach (var match in bucket.Locations)
 				{
@@ -204,10 +193,6 @@ namespace InvertedIndex.Indexing
 			{
 				var doc = documentIDX[document.Key];
 
-				//FIXME: I need a distance function that will work when comparing short documents (query) with longer ones of variing size (indexed docs)
-				// neither of these work in this case - maybe I need to get tf-idf averaged across terms?
-				//var score = JaccardSimilarity(tokens.Keys, doc);
-				//var score = CosignSimilarity(tokens.Keys, doc, queryTfIdf, document.Value);
 				var score = CosineSimilarity(queryTfIdf, document.Value);
 
 				scores.Add(new Tuple<Int32, Double>(doc.DocumentId, score));
@@ -221,48 +206,8 @@ namespace InvertedIndex.Indexing
 		{
 			var superset = document.GetTerms().Union(queryTfIdf.Select(t => t.Item1));
 
-			var vectorOne = CreateFrequencyVector(superset, queryTfIdf);
-			var vectorTwo = CreateFrequencyVector(superset, document);
-
-			var dotProduct = DotProduct(vectorOne, vectorTwo);
-			var productOfMagnitudes = ProductOfMagnitudes(vectorOne, vectorTwo);
-
-			return dotProduct / productOfMagnitudes;
-		}
-
-		private Double[] CreateFrequencyVector(IEnumerable<int> superset, Document document)
-		{
-			Dictionary<Int32, Double> keyset = new Dictionary<Int32, Double>();
-			foreach (var key in superset)
-				keyset.Add(key, 0);
-
-			foreach (var termId in document.GetTerms())
-			{
-				var tf = document.GetTermFrequency(termId);
-				var tfidf = searchIDX[termId].GetTfIdf(lastDocumentId, tf);
-				keyset[termId] = tfidf;
-			}
-
-			return keyset.Values.ToArray();
-		}
-
-		//private Double JaccardSimilarity(IEnumerable<Int32> tokens, Document document)
-		//{
-		//	if (tokens.Count() == 0)
-		//		return 0.0d;
-
-		//	var union = document.UnionWith(tokens);
-		//	var intersection = document.IntersectWith(tokens);
-
-		//	return (double) intersection.Count / (double) union.Count;
-		//}
-
-		private Double CosignSimilarity(IEnumerable<Int32> queryTokens, Document document, IEnumerable<Tuple<Int32, Double>> queryTfIdf, IEnumerable<Tuple<Int32, Double>> documentTfIdf)
-		{
-			var superset = searchIDX.Keys.Union(queryTokens);// document.UnionWith(queryTokens); // Union(queryTokens, document);
-			
-			var vectorOne = CreateFrequencyVector(superset, queryTfIdf);
-			var vectorTwo = CreateFrequencyVector(superset, documentTfIdf);
+			var vectorOne = CreateQueryFrequencyVector(superset, queryTfIdf);
+			var vectorTwo = CreateDocumentFrequencyVector(superset, document);
 
 			var dotProduct = DotProduct(vectorOne, vectorTwo);
 			var productOfMagnitudes = ProductOfMagnitudes(vectorOne, vectorTwo);
@@ -294,24 +239,23 @@ namespace InvertedIndex.Indexing
 			return sum;
 		}
 
-
-		internal static byte[] CreateFrequencyVector(IEnumerable<Int32> superset, IEnumerable<Int32> value)
+		private Double[] CreateDocumentFrequencyVector(IEnumerable<Int32> superset, Document document)
 		{
-			Dictionary<Int32, byte> keyset = new Dictionary<Int32, byte>();
+			Dictionary<Int32, Double> keyset = new Dictionary<Int32, Double>();
 			foreach (var key in superset)
 				keyset.Add(key, 0);
 
-			foreach (var key in value)
+			foreach (var termId in document.GetTerms())
 			{
-				var count = keyset[key];
-				keyset[key] = ++count;
+				var tf = document.GetTermFrequency(termId);
+				var tfidf = searchIDX[termId].GetTfIdf(documentCount, tf);
+				keyset[termId] = tfidf;
 			}
 
 			return keyset.Values.ToArray();
 		}
 
-
-		internal static Double[] CreateFrequencyVector(IEnumerable<Int32> superset, IEnumerable<Tuple<Int32, Double>> value)
+		internal static Double[] CreateQueryFrequencyVector(IEnumerable<Int32> superset, IEnumerable<Tuple<Int32, Double>> value)
 		{
 			Dictionary<Int32, Double> keyset = new Dictionary<Int32, Double>();
 			foreach (var key in superset)
