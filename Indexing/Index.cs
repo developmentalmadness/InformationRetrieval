@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace InvertedIndex.Indexing
 {
+	/// <summary>
+	/// http://www.ir-facility.org/scoring-and-ranking-techniques-tf-idf-term-weighting-and-cosine-similarity
+	/// </summary>
 	public class Index : ISearchIndex
 	{
 		IDictionary<Int32, TermBucket> searchIDX = new Dictionary<Int32, TermBucket>();
@@ -19,39 +22,22 @@ namespace InvertedIndex.Indexing
 		private struct TermBucket
 		{
 			private IList<Int64> _locations;
-			private Int32 _term;
+			private Int32 _termid;
 			private Int32 _maxTermFrequency;
 
 			public TermBucket(Int32 term)
 			{
 				_locations = new List<Int64>();
-				_term = term;
+				_termid = term;
 				_maxTermFrequency = 0;
-			}
-
-			/// <summary>
-			/// The number of documents which contain the 
-			/// term at least one time.
-			/// </summary>
-			public Int32 DocumentFrequency { get { return _locations.Count; } }
-
-			/// <summary>
-			/// The number of documents in the index 
-			/// divided by the document frequency
-			/// </summary>
-			public Double GetInverseDocumentFrequency(int documentCount)
-			{
-				return 1.0d + Math.Log10((double) documentCount / (double) DocumentFrequency);
-			}
-
-			public Double NormalizeTermFrequency(int termFrequency)
-			{
-				return (double)termFrequency / (double)_maxTermFrequency;
 			}
 
 			public Double GetTfIdf(int totalDocuments, int termFrequency)
 			{
-				return NormalizeTermFrequency(termFrequency) * GetInverseDocumentFrequency(totalDocuments);
+				var normalizedTermFrequency = (double)termFrequency / (double)_maxTermFrequency;
+				var documentFrequency = (double)_locations.Count();
+				var inverseDocumentFrequency = 1.0d + Math.Log10((double)totalDocuments / documentFrequency);
+				return normalizedTermFrequency * inverseDocumentFrequency;
 			}
 
 			/// <summary>
@@ -112,46 +98,29 @@ namespace InvertedIndex.Indexing
 			if (tokens.Keys.Count == 0)
 				return;
 
-			/*
-			 * I could omit terms with a high idf from the search
-			 * terms and maybe the index (of course how would I know
-			 * unless I kept the terms as part of the index?) - Most
-			 * likely I'd have to at least come up with a partial list
-			 * of stopwords to prevent having terms like 'The' waste
-			 * valuable memory.
-			 * 
-			 * tf = # of times a term (t) occurs in a document (d)
-			 * df = # of times a term (t) occurs in the document index (D)
-			 * 
-			 * idf = 1 + log(|D| / df)
-			 * tf-idf = tf * idf
-			 * 
-			 * see: http://www.ir-facility.org/scoring-and-ranking-techniques-tf-idf-term-weighting-and-cosine-similarity
-			 */
-			// NOTE: this is also == the total # of documents :)
 			var documentId = ++documentCount;
 			var doc = new Document(documentId);
-
 
 			/* this is almost O(2n), if we can update the index while 
 			 * I tokenize I won't have to pass back over the results 
 			 
-			 The reason we can't (currently) is because we're using Count as the low value for bucket.Locations ? Is there an easy way to increment the value? on each pass?*/
-			foreach (var pair in tokens)
+			 The reason we can't (currently) is because we're using Count as the low value for bucket.Locations? 
+			 * Is there an easy way to increment the value? on each pass?*/
+			foreach (var item in tokens)
 			{
-				var termSeq = pair.Key;
-				if (!searchIDX.ContainsKey(termSeq))
-					searchIDX.Add(termSeq, new TermBucket(pair.Key));
+				var termId = item.Key;
+				var frequency = item.Value.Count();
 
-				var bucket = searchIDX[termSeq];
+				if (!searchIDX.ContainsKey(termId))
+					searchIDX.Add(termId, new TermBucket(termId));
+
+				var bucket = searchIDX[termId];
 
 				// we're currently assuming each document in is unique (no updates)
-				bucket.AddLocation(documentId, pair.Value.Count());
-				doc.AddTerm(termSeq, pair.Value.Count());
+				bucket.AddLocation(documentId, item.Value.Count());
+				doc.AddTerm(termId, frequency);
 
-				searchIDX[termSeq] = bucket;
-
-				// merge documentId with term count (tf)
+				searchIDX[termId] = bucket;
 			}
 
 			documentIDX.Add(documentId, doc);
@@ -173,12 +142,15 @@ namespace InvertedIndex.Indexing
 			{
 				var termId = item.Key;
 				if (!searchIDX.ContainsKey(termId))
+				{
+					queryTfIdf[tokenIndex] = new Tuple<Int32, Double>(termId, 0.0d);
 					continue;
+				}
 
 				// merge results by document id
 				var bucket = searchIDX[termId];
 
-				queryTfIdf[tokenIndex] = new Tuple<int, double>(item.Key, bucket.GetTfIdf(documentCount, 1));
+				queryTfIdf[tokenIndex] = new Tuple<Int32, Double>(termId, bucket.GetTfIdf(documentCount, 1));
 
 				foreach (var match in bucket.Locations)
 				{
