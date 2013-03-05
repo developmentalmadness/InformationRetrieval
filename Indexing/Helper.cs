@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace InvertedIndex.Indexing
 {
 	public static class Helper
 	{
+
 		public static Int64 MergeInt32Value(this Int32 high, Int32 low)
 		{
 			ulong unsignedKey = (((ulong)high) << 32 | (uint)low);
@@ -20,9 +22,11 @@ namespace InvertedIndex.Indexing
 			return new Int32[] { (int)(uint)(unsignedKey >> 32), (int)(uint)(unsignedKey & 0xffffffffUL) };
 		}
 
-		public static IDictionary<String, IEnumerable<Int32>> Tokenize(this String data)
+		public static Tuple<IDictionary<Int32, IEnumerable<Int32>>, IEnumerable<Int32>> Tokenize(this String data)
 		{
-			var histogram = new Dictionary<String, IEnumerable<Int32>>();
+			var histogram = new Dictionary<Int32, IEnumerable<Int32>>();
+			var document = new List<Int32>();
+
 			StringBuilder term = new StringBuilder();
 
 			for (int i = 0, index = 0; i < data.Length; i++)
@@ -38,6 +42,8 @@ namespace InvertedIndex.Indexing
 					case '\r':
 					case '\n':
 					case '\t':
+					case '.':
+					case ',':
 						c = ' ';
 						break;
 				}
@@ -61,15 +67,41 @@ namespace InvertedIndex.Indexing
 					if (String.IsNullOrEmpty(t))
 						continue;
 
-					if (histogram.ContainsKey(t) == false)
-						histogram.Add(t, new List<Int32>());
+					// TODO: filter out stop words here
+					// TODO: add stemming support
+					var sequence = GetTermSequence(t);
+					if (histogram.ContainsKey(sequence) == false)
+						histogram.Add(sequence, new List<Int32>());
 
-					((IList<Int32>)histogram[t]).Add(index++);
+					((IList<Int32>)histogram[sequence]).Add(index++);
+
+					document.Add(sequence);
 				}
 
 			}
 
-			return histogram;
+			return new Tuple<IDictionary<int,IEnumerable<int>>,IEnumerable<int>>(histogram, document);
+		}
+
+		private static IDictionary<String, Int32> termIDX = new Dictionary<String, Int32>();
+		private static Int32 termSequence = 0;
+		private static object syncLock = new object();
+		private static Int32 GetTermSequence(string term)
+		{
+			int sequence = 0;
+			if (!termIDX.TryGetValue(term, out sequence))
+			{
+				lock (syncLock)
+				{
+					if (!termIDX.TryGetValue(term, out sequence))
+					{
+						sequence = ++termSequence;
+						termIDX.Add(term, sequence);
+					}
+				}
+			}
+
+			return sequence;
 		}
 
 		private static int skipHtmlTag(ref String data, int startAt)

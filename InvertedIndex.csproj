@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Indexing\Helper.cs" />
     <Compile Include="Indexing\Index.cs" />
+    <Compile Include="Indexing\Index2.cs" />
+    <Compile Include="Indexing\ISearchIndex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
