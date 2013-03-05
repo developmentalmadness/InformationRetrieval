@@ -99,6 +99,11 @@ namespace InvertedIndex.Indexing
 			{
 				return termset[termId];
 			}
+
+			public override int GetHashCode()
+			{
+				return documentid.GetHashCode();
+			}
 		}
 
 		public void Add(String document)
@@ -155,12 +160,12 @@ namespace InvertedIndex.Indexing
 		public IEnumerable<Tuple<Int32, Double>> Search(String query)
 		{
 			// find matches
-			var tokens = query.Tokenize(); // Tokenize(query).Item1;
+			var tokens = query.Tokenize();
 			var tokenCount = tokens.Count();
 			if (tokenCount == 0)
 				return new Tuple<Int32, Double>[0];
 
-			var results = new Dictionary<Int32, Document>();
+			var results = new HashSet<Document>();
 			var queryTfIdf = new Tuple<Int32, Double>[tokenCount];
 
 			int tokenIndex = 0;
@@ -180,8 +185,9 @@ namespace InvertedIndex.Indexing
 					var key = match.SplitInt64Value();
 					var docId = key[0];
 
-					if (results.ContainsKey(docId) == false)
-						results.Add(docId, documentIDX[docId]);
+					var doc = documentIDX[docId];
+					if (results.Contains(doc) == false)
+						results.Add(doc);
 				}
 
 				tokenIndex++;
@@ -191,9 +197,9 @@ namespace InvertedIndex.Indexing
 			var scores = new List<Tuple<Int32, Double>>();
 			foreach (var document in results)
 			{
-				var doc = documentIDX[document.Key];
+				var doc = documentIDX[document.DocumentId];
 
-				var score = CosineSimilarity(queryTfIdf, document.Value);
+				var score = CosineSimilarity(queryTfIdf, document);
 
 				scores.Add(new Tuple<Int32, Double>(doc.DocumentId, score));
 			}
@@ -206,12 +212,16 @@ namespace InvertedIndex.Indexing
 		{
 			var superset = document.GetTerms().Union(queryTfIdf.Select(t => t.Item1));
 
+			// normalize documents into term vectors for comparison
 			var vectorOne = CreateQueryFrequencyVector(superset, queryTfIdf);
 			var vectorTwo = CreateDocumentFrequencyVector(superset, document);
 
+			// calculate the dot product of the two vectors ((V1[0] * V2[0]) + (V1[1] * V2[1]) ... + (V1[n] * V2[n])) 
 			var dotProduct = DotProduct(vectorOne, vectorTwo);
+			// calculate the product of the vector magnatudes (Sqrt(Sum(V1) * Sum(V2)))
 			var productOfMagnitudes = ProductOfMagnitudes(vectorOne, vectorTwo);
 
+			// return dot product normalized by the product of magnatudes
 			return dotProduct / productOfMagnitudes;
 		}
 
@@ -231,6 +241,16 @@ namespace InvertedIndex.Indexing
 			return System.Math.Sqrt(product);
 		}
 
+		/// <summary>
+		/// Returns the dot product of two vectors
+		/// </summary>
+		/// <example>
+		/// given two vectors: [1, 3, -5], [2, -1, -6]
+		///     THEN: (1 * 2) + (3 * -1) * (-5 * -6) = 29
+		/// </example>
+		/// <param name="vectorOne"></param>
+		/// <param name="vectorTwo"></param>
+		/// <returns>the dot product of two vectors</returns>
 		internal static double DotProduct(Double[] vectorOne, Double[] vectorTwo)
 		{
 			var sum = 0d;
@@ -239,6 +259,12 @@ namespace InvertedIndex.Indexing
 			return sum;
 		}
 
+		/// <summary>
+		/// Retuns the frequency of terms in a document in relation to a superset of terms.
+		/// </summary>
+		/// <param name="superset">Some set of terms which includes at least all the terms in the document "value".</param>
+		/// <param name="value">The document for which the vector will be calculated.</param>
+		/// <returns>The frequency of each term from superset that is contained in value</returns>
 		private Double[] CreateDocumentFrequencyVector(IEnumerable<Int32> superset, Document document)
 		{
 			Dictionary<Int32, Double> keyset = new Dictionary<Int32, Double>();
@@ -255,6 +281,12 @@ namespace InvertedIndex.Indexing
 			return keyset.Values.ToArray();
 		}
 
+		/// <summary>
+		/// Retuns the frequency of terms in a query in relation to a superset of terms.
+		/// </summary>
+		/// <param name="superset">Some set of terms which includes at least all the terms in the query "value".</param>
+		/// <param name="value">The query for which the vector will be calculated.</param>
+		/// <returns>The frequency of each term from superset that is contained in value</returns>
 		internal static Double[] CreateQueryFrequencyVector(IEnumerable<Int32> superset, IEnumerable<Tuple<Int32, Double>> value)
 		{
 			Dictionary<Int32, Double> keyset = new Dictionary<Int32, Double>();
