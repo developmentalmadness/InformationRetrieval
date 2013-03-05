@@ -92,6 +92,13 @@ namespace InvertedIndex.Indexing
 			}
 		}
 
+		/// <summary>
+		/// Add a new document to the index
+		/// </summary>
+		/// <remarks>
+		/// Update isn't supported yet, so re-adding the same document will create duplicates
+		/// </remarks>
+		/// <param name="document">A document to be indexed</param>
 		public void Add(String document)
 		{
 			var tokens = document.Tokenize();
@@ -126,6 +133,11 @@ namespace InvertedIndex.Indexing
 			documentIDX.Add(documentId, doc);
 		}
 
+		/// <summary>
+		/// Returns a list of DocumentIds and the relavancy score sorted by the most relevant
+		/// </summary>
+		/// <param name="query">the search query</param>
+		/// <returns>matching documents sorted by relevancy</returns>
 		public IEnumerable<Tuple<Int32, Double>> Search(String query)
 		{
 			// find matches
@@ -137,7 +149,6 @@ namespace InvertedIndex.Indexing
 			var queryDoc = new Document(0);
 			var results = new HashSet<Document>();
 
-			int tokenIndex = 0;
 			foreach (var item in tokens)
 			{
 				var termId = item.Key;
@@ -157,18 +168,19 @@ namespace InvertedIndex.Indexing
 					if (results.Contains(doc) == false)
 						results.Add(doc);
 				}
-
-				tokenIndex++;
 			}
 
 			// score documents
 			var scores = new List<Tuple<Int32, Double>>();
 			foreach (var document in results)
 			{
+				// get the document
 				var doc = documentIDX[document.DocumentId];
 
+				// rank the document against the search terms
 				var score = CosineSimilarity(queryDoc, document);
 
+				// record the score so we can rank and return it
 				scores.Add(new Tuple<Int32, Double>(doc.DocumentId, score));
 			}
 
