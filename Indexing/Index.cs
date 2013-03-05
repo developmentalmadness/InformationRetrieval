@@ -104,7 +104,7 @@ namespace InvertedIndex.Indexing
 		public void Add(String document)
 		{
 			var tokens = document.Tokenize();
-			if (tokens.Item1.Keys.Count == 0)
+			if (tokens.Keys.Count == 0)
 				return;
 
 			/*
@@ -132,7 +132,7 @@ namespace InvertedIndex.Indexing
 			 * I tokenize I won't have to pass back over the results 
 			 
 			 The reason we can't (currently) is because we're using Count as the low value for bucket.Locations ? Is there an easy way to increment the value? on each pass?*/
-			foreach (var pair in tokens.Item1)
+			foreach (var pair in tokens)
 			{
 				var termSeq = pair.Key;
 				if (!searchIDX.ContainsKey(termSeq))
@@ -155,7 +155,7 @@ namespace InvertedIndex.Indexing
 		public IEnumerable<Tuple<Int32, Double>> Search(String query)
 		{
 			// find matches
-			var tokens = query.Tokenize().Item1; // Tokenize(query).Item1;
+			var tokens = query.Tokenize(); // Tokenize(query).Item1;
 			var tokenCount = tokens.Count();
 			if (tokenCount == 0)
 				return new Tuple<Int32, Double>[0];

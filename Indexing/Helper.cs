@@ -22,11 +22,9 @@ namespace InvertedIndex.Indexing
 			return new Int32[] { (int)(uint)(unsignedKey >> 32), (int)(uint)(unsignedKey & 0xffffffffUL) };
 		}
 
-		public static Tuple<IDictionary<Int32, IEnumerable<Int32>>, IEnumerable<Int32>> Tokenize(this String data)
+		public static IDictionary<Int32, IEnumerable<Int32>> Tokenize(this String data)
 		{
 			var histogram = new Dictionary<Int32, IEnumerable<Int32>>();
-			var document = new List<Int32>();
-
 			StringBuilder term = new StringBuilder();
 
 			for (int i = 0, index = 0; i < data.Length; i++)
@@ -74,13 +72,11 @@ namespace InvertedIndex.Indexing
 						histogram.Add(sequence, new List<Int32>());
 
 					((IList<Int32>)histogram[sequence]).Add(index++);
-
-					document.Add(sequence);
 				}
 
 			}
 
-			return new Tuple<IDictionary<int,IEnumerable<int>>,IEnumerable<int>>(histogram, document);
+			return histogram;
 		}
 
 		private static IDictionary<String, Int32> termIDX = new Dictionary<String, Int32>();
@@ -102,6 +98,11 @@ namespace InvertedIndex.Indexing
 			}
 
 			return sequence;
+		}
+
+		public static Int32 GetTermId(String term)
+		{
+			return termIDX[term.ToLower()];
 		}
 
 		private static int skipHtmlTag(ref String data, int startAt)
