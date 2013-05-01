@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{1F3617B7-5855-4FEE-B38A-7D92295344F6}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BloomFilter.Tests", "Tests\BloomFilter.Tests\BloomFilter.Tests.csproj", "{3D17F3B2-9804-4419-A26B-F90DFA7060B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvertedIndex", "Source\InvertedIndex\InvertedIndex.csproj", "{4540D365-679D-42E8-AF19-253FED324F06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvertedIndex.Tests", "Tests\InvertedIndex.Tests\InvertedIndex.Tests.csproj", "{3390D230-6876-4D0A-B701-41DCD4F7F0E9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{94571F55-0DB3-46E0-9923-159706C32A4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BloomFilter", "Source\BloomFilter\BloomFilter.csproj", "{8E02862A-8372-4029-8822-63C3D595593D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D17F3B2-9804-4419-A26B-F90DFA7060B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D17F3B2-9804-4419-A26B-F90DFA7060B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D17F3B2-9804-4419-A26B-F90DFA7060B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D17F3B2-9804-4419-A26B-F90DFA7060B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4540D365-679D-42E8-AF19-253FED324F06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4540D365-679D-42E8-AF19-253FED324F06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4540D365-679D-42E8-AF19-253FED324F06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4540D365-679D-42E8-AF19-253FED324F06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3390D230-6876-4D0A-B701-41DCD4F7F0E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3390D230-6876-4D0A-B701-41DCD4F7F0E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3390D230-6876-4D0A-B701-41DCD4F7F0E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3390D230-6876-4D0A-B701-41DCD4F7F0E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E02862A-8372-4029-8822-63C3D595593D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E02862A-8372-4029-8822-63C3D595593D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E02862A-8372-4029-8822-63C3D595593D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E02862A-8372-4029-8822-63C3D595593D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
