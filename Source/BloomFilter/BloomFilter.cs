@@ -16,6 +16,7 @@ namespace BloomFilter
 
         public BloomFilter(uint size, int hashTransformCount)
         {
+            // TODO: this can be calculated, provide an overload that omits this parameter and calculates it based on "size"
             this.hashTransformCount = hashTransformCount;
             this.size = size;
 
@@ -29,9 +30,13 @@ namespace BloomFilter
 
             for (int i = 0; i < hash.Length; i++)
             {
+                // use integer division to determine which "bucket" of 8 bits the hash falls into
                 ulong bucket = hash[i] / bucketSize;
+
+                // get the remainder to find which individual bit to flip, then shift to create a mask
                 byte slot = (byte) (1 << (int)(hash[i] % bucketSize));
 
+                // apply the bit mask to the bucket
                 vector[bucket] |= slot;
             }
         }
@@ -42,9 +47,13 @@ namespace BloomFilter
 
             for (int i = 0; i < hash.Length; i++)
             {
+                // use integer division to determine which "bucket" of 8 bits the hash falls into
                 ulong bucket = hash[i] / bucketSize;
+
+                // get the remainder to find which individual bit to flip, then shift to create a mask
                 byte slot = (byte)(1 << (int)(hash[i] % bucketSize));
 
+                // use the mask to check the filter for existance
                 if ((vector[bucket] & slot) == 0)
                     return false;
             }
