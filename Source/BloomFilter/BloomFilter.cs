@@ -12,6 +12,8 @@ namespace BloomFilter
         private int hashTransformCount;
         private byte[] vector;
         private uint size;
+        
+        // we could use any size here, we just need to match the number of bits for each element in the vector (byte == 8; short = 16; int = 32; long = 64;)
         private const byte bucketSize = 8;
 
         public BloomFilter(uint size, int hashTransformCount)
@@ -20,6 +22,7 @@ namespace BloomFilter
             this.hashTransformCount = hashTransformCount;
             this.size = size;
 
+            // vectorSize should be the specified size divided by the size of an element in the array, plus 1 for rounding/overflow
             uint vectorSize = (size / bucketSize) + 1u;
             vector = new byte[vectorSize];
         }
