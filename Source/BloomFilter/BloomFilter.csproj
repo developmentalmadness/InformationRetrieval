@@ -39,7 +39,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="BloomFilter.cs" />
+    <Compile Include="BloomFilterFactory.cs" />
+    <Compile Include="CountingBloomFilter.cs" />
+    <Compile Include="IBloomFilter.cs" />
+    <Compile Include="ICountingBloomFilter.cs" />
+    <Compile Include="IHashFunctionProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

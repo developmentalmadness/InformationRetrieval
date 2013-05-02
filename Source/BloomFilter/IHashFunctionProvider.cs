@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace BloomFilter
 {
-    public class Class1
+    public interface IHashFunctionProvider<T>
     {
+        int GetHashCode<T>(T item);
     }
 }

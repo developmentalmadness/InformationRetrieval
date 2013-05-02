@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BloomFilter.Tests
+namespace BloomFilter
 {
-    public class Class1
+    public interface ICountingBloomFilter<T> : IBloomFilter<T>
     {
+        void Delete(T item);
     }
 }
