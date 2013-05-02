@@ -10,6 +10,8 @@ namespace BloomFilter.Tests
     [TestFixture]
     public class CountingBloomFilter_Fixture
     {
+        //TODO: need more tests around edge cases (values that hash to first, last for slot or whole vector, collisions, etc)
+
         [Test, Category("CountingBloomFilter")]
         public void SameKey_ReturnsTrue()
         {

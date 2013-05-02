@@ -14,7 +14,7 @@ namespace BloomFilter
         private uint size;
         
         // we could use any size here, we just need to match the number of bits for each element in the vector (byte == 8; short = 16; int = 32; long = 64;)
-        private const byte bucketSize = 8;
+        private const byte BUCKET_SIZE = 8;
 
         public BloomFilter(uint size, int hashTransformCount)
         {
@@ -23,7 +23,7 @@ namespace BloomFilter
             this.size = size;
 
             // vectorSize should be the specified size divided by the size of an element in the array, plus 1 for rounding/overflow
-            uint vectorSize = (size / bucketSize) + 1u;
+            uint vectorSize = (size / BUCKET_SIZE) + 1u;
             vector = new byte[vectorSize];
         }
 
@@ -34,10 +34,10 @@ namespace BloomFilter
             for (int i = 0; i < hash.Length; i++)
             {
                 // use integer division to determine which "bucket" of 8 bits the hash falls into
-                ulong bucket = hash[i] / bucketSize;
+                ulong bucket = hash[i] / BUCKET_SIZE;
 
                 // get the remainder to find which individual bit to flip, then shift to create a mask
-                byte slot = (byte) (1 << (int)(hash[i] % bucketSize));
+                byte slot = (byte) (1 << (int)(hash[i] % BUCKET_SIZE));
 
                 // apply the bit mask to the bucket
                 vector[bucket] |= slot;
@@ -51,10 +51,10 @@ namespace BloomFilter
             for (int i = 0; i < hash.Length; i++)
             {
                 // use integer division to determine which "bucket" of 8 bits the hash falls into
-                ulong bucket = hash[i] / bucketSize;
+                ulong bucket = hash[i] / BUCKET_SIZE;
 
                 // get the remainder to find which individual bit to flip, then shift to create a mask
-                byte slot = (byte)(1 << (int)(hash[i] % bucketSize));
+                byte slot = (byte)(1 << (int)(hash[i] % BUCKET_SIZE));
 
                 // use the mask to check the filter for existance
                 if ((vector[bucket] & slot) == 0)

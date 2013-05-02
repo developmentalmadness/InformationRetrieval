@@ -13,16 +13,17 @@ namespace BloomFilter
         private uint size;
         private int hashTransformCount;
 
-        // each slot is 4 bytes, so a bucket only has 2 slots 
-        private const byte bucketSize = 2;
-        private const byte slotSize = 4;
+        // each slot is 4 bytes (a "nibble"), so a bucket only has 2 slots 
+        private const byte BUCKET_SIZE = 2;
+        private const byte SLOT_SIZE = 4;
+        private const byte LOW_SLOT_MASK = 0x0F;
 
         public CountingBloomFilter(uint size, int hashTransformCount)
         {
             this.size = size;
             this.hashTransformCount = hashTransformCount;
 
-            uint vectorSize = (size / bucketSize) + (size % bucketSize);
+            uint vectorSize = (size / BUCKET_SIZE) + (size % BUCKET_SIZE);
             vector = new byte[vectorSize];
         }
 
@@ -34,14 +35,20 @@ namespace BloomFilter
 
             for (uint i = 1; i <= hash.Length; i++)
             {
-                ulong bucket = hash[i - 1] / bucketSize;
-                ulong slot = hash[i - 1] % bucketSize;
+                // use integer division to determine which "bucket" of 8 bits the hash falls into
+                ulong bucket = hash[i - 1] / BUCKET_SIZE;
 
+                // use the remainder (1 or 0) to find which individual "nibble" to set
+                ulong slot = hash[i - 1] % BUCKET_SIZE;
+
+                // split the bucket into two "nibbles"
                 int[] slots = SplitBucket(vector[bucket]);
                 
+                // decrement the correct "nibble"
                 if (--slots[slot] < 0)
                     throw new InvalidOperationException("Too many rerences were removed! The counter can't be negative.");
 
+                // update the bucket with the new, merged values
                 vector[bucket] = MergeBucket(slots);
             }
         }
@@ -54,14 +61,20 @@ namespace BloomFilter
 
             for (uint i = 1; i <= hash.Length; i++)
             {
-                ulong bucket = hash[i - 1] / bucketSize;
-                ulong slot = hash[i - 1] % bucketSize;
+                // use integer division to determine which "bucket" of 8 bits the hash falls into
+                ulong bucket = hash[i - 1] / BUCKET_SIZE;
 
+                // use the remainder (1 or 0) to find which individual "nibble" to set
+                ulong slot = hash[i - 1] % BUCKET_SIZE;
+
+                // split the bucket into two "nibbles"
                 int[] slots = SplitBucket(vector[bucket]);
 
+                // increment the correct "nibble"
                 if (++slots[slot] > 15)
                     throw new OverflowException("The number of references surpased the limit supported by this algorithm! Try increasing the size of the BloomFilter.");
 
+                // update the bucket with the new, merged values
                 vector[bucket] = MergeBucket(slots);
             }
         }
@@ -74,14 +87,21 @@ namespace BloomFilter
 
             for (uint i = 1; i <= hash.Length; i++)
             {
-                ulong bucket = hash[i - 1] / bucketSize;
-                ulong slot = hash[i - 1] % bucketSize;
+                // use integer division to determine which "bucket" of 8 bits the hash falls into
+                ulong bucket = hash[i - 1] / BUCKET_SIZE;
 
+                // use the remainder (1 or 0) to find which individual "nibble" to set
+                ulong slot = hash[i - 1] % BUCKET_SIZE;
+
+                // split the bucket into two "nibbles"
                 int[] slots = SplitBucket(vector[bucket]);
+
+                // if the value is 0, then there's no match
                 if (slots[slot] == 0)
                     return false;
             }
 
+            // all hashes were matched in the vector
             return true;
         }
 
@@ -90,7 +110,7 @@ namespace BloomFilter
         private int[] SplitBucket(byte bucketValue)
         {
             return new int[]{
-                0x0F & bucketValue, // lo slot
+                LOW_SLOT_MASK & bucketValue, // lo slot
                 bucketValue >> 4      // hi slot
             };
         }
@@ -98,7 +118,7 @@ namespace BloomFilter
         private byte MergeBucket(int[] slotValues)
         {
             return (byte)((slotValues[1] << 4) // hi slot
-                | (0x0F & slotValues[0]));     // lo slot
+                | (LOW_SLOT_MASK & slotValues[0]));     // lo slot
         }
     }
 }
