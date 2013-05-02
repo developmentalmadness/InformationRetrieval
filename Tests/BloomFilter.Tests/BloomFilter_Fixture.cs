@@ -11,13 +11,51 @@ namespace BloomFilter
     public class BloomFilter_Fixture
     {
         [Test, Category("BloomFilter")]
-        public void Test_ReturnsTrueForAddedKey()
+        public void Test_SameKey_ReturnsTrue()
         {
             var target = new StringBloomFilter(100000, 3);
 
             target.Add("Orange");
 
             Assert.IsTrue(target.Test("Orange"));
+        }
+
+        [Test, Category("BloomFilter")]
+        public void Test_DifferentKey_ReturnsFalse()
+        {
+            var target = new StringBloomFilter(100000, 3);
+
+            target.Add("Orange");
+
+            Assert.False(target.Test("Green"));
+        }
+
+        [Test, Category("BloomFilter")]
+        public void Test_NotInSet_ReturnsFalse()
+        {
+            var target = new StringBloomFilter(100000, 3);
+
+            target.Add("black");
+            target.Add("white");
+            target.Add("green");
+            target.Add("yellow");
+            target.Add("orange");
+
+            Assert.False(target.Test("violet"));
+        }
+
+        [Test, Category("BloomFilter")]
+        public void Test_InSet_ReturnsTrue()
+        {
+            var target = new StringBloomFilter(100000, 3);
+
+            target.Add("black");
+            target.Add("white");
+            target.Add("green");
+            target.Add("yellow");
+            target.Add("orange");
+
+            Assert.True(target.Test("orange"));
         }
     }
 }
