@@ -11,7 +11,7 @@ namespace BloomFilter
     public class BloomFilter_Fixture
     {
         [Test, Category("BloomFilter")]
-        public void Test_SameKey_ReturnsTrue()
+        public void SameKey_ReturnsTrue()
         {
             var target = new StringBloomFilter(100000, 3);
 
@@ -21,7 +21,7 @@ namespace BloomFilter
         }
 
         [Test, Category("BloomFilter")]
-        public void Test_DifferentKey_ReturnsFalse()
+        public void DifferentKey_ReturnsFalse()
         {
             var target = new StringBloomFilter(100000, 3);
 
@@ -31,7 +31,7 @@ namespace BloomFilter
         }
 
         [Test, Category("BloomFilter")]
-        public void Test_NotInSet_ReturnsFalse()
+        public void NotInSet_ReturnsFalse()
         {
             var target = new StringBloomFilter(100000, 3);
 
@@ -45,7 +45,7 @@ namespace BloomFilter
         }
 
         [Test, Category("BloomFilter")]
-        public void Test_InSet_ReturnsTrue()
+        public void InSet_ReturnsTrue()
         {
             var target = new StringBloomFilter(100000, 3);
 
