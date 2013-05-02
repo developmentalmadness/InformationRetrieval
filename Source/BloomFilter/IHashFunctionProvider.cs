@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace BloomFilter
 {
-    public interface IHashFunctionProvider<T>
+    public interface IHashFunctionProvider
     {
-        int GetHashCode<T>(T item);
+        ulong[] GetHashCodes(byte[] value, int count, ulong max);
     }
 }

@@ -10,8 +10,10 @@ namespace BloomFilter
     /// Provides hashing capabilities required by BloomFilter
     /// </summary>
     /// <see cref="http://www.eecs.harvard.edu/~kirsch/pubs/bbbf/rsa.pdf"/>
-    public class DoubleHashProvider
+    public class HashProvider : IHashFunctionProvider
     {
+        #region FNV hash functions
+
         // FNV constants obtained from: http://isthe.com/chongo/tech/comp/fnv/
         const uint x32Offset = 2166136261;
         const uint x32Prime = 16777619;
@@ -82,25 +84,26 @@ namespace BloomFilter
             return hash;
         }
 
+        #endregion
+
         /// <summary>
         /// Applies <paramref name="count"/> hash transformations on <paramref name="value"/> and 
-        /// returns each transformation with a limit of <paramref name="size"/>.
+        /// returns each transformation with a limit of <paramref name="max"/>.
         /// </summary>
         /// <see cref="http://www.eecs.harvard.edu/~kirsch/pubs/bbbf/rsa.pdf"/>
         /// <param name="value">The value to be hashed.</param>
         /// <param name="count">The number of transformations to be done.</param>
-        /// <param name="size">The maximum hash code value.</param>
+        /// <param name="max">The maximum hash code value.</param>
         /// <returns><paramref name="count"/> hash values.</returns>
-        public int[] GetHashCodes(String value, int count, int size)
+        public ulong[] GetHashCodes(byte[] bytes, int count, ulong max)
         {
-            int[] result = new int[count];
+            ulong[] result = new ulong[count];
             
-            byte[] bytes = UTF8Encoding.UTF8.GetBytes(value);
             ulong hash1 = Hashx64FNV1(bytes);
             ulong hash2 = Hashx64FNV1a(bytes);
 
             for (uint i = 1; i <= count; i++)
-                result[i- 1] = (int) (hash1 + (i * hash2)) % size;
+                result[i- 1] = (hash1 + (i * hash2)) % max;
 
             return result;
         }

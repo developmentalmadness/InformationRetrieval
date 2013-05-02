@@ -13,9 +13,7 @@ namespace BloomFilter
         [Test, Category("BloomFilter")]
         public void Test_ReturnsTrueForAddedKey()
         {
-            var factory = new BloomFilterFactory();
-
-            var target = factory.Create<String>(100000);
+            var target = new StringBloomFilter(100000, 3);
 
             target.Add("Orange");
 

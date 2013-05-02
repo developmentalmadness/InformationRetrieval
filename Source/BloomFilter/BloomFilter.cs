@@ -6,35 +6,52 @@ using System.Threading.Tasks;
 
 namespace BloomFilter
 {
-    public class BloomFilter<T> : IBloomFilter<T>
+    public abstract class BloomFilter<T> : IBloomFilter<T>
     {
-        private IHashFunctionProvider<T> hashProvider;
-        byte[] vector;
+        private IHashFunctionProvider hashProvider = new HashProvider();
+        private int hashTransformCount;
+        private byte[] vector;
+        private uint size;
+        private const byte bucketSize = 8;
 
-        public BloomFilter(IHashFunctionProvider<T> hashProvider, int size)
+        public BloomFilter(uint size, int hashTransformCount)
         {
-            this.hashProvider = hashProvider;
-            vector = new byte[size / 8];
+            this.hashTransformCount = hashTransformCount;
+            this.size = size;
+
+            uint vectorSize = (size / bucketSize) + 1u;
+            vector = new byte[vectorSize];
         }
 
         public void Add(T key)
         {
-            int hash = hashProvider.GetHashCode(key);
+            ulong[] hash = hashProvider.GetHashCodes(GetBytes(key), hashTransformCount, size);
 
-            int bucket = hash / 8;
-            byte slot = (byte) (hash * 8);
+            for (int i = 0; i < hash.Length; i++)
+            {
+                ulong bucket = hash[i] / bucketSize;
+                byte slot = (byte) (1 << (int)(hash[i] % bucketSize));
 
-            vector[bucket] = (byte) (vector[bucket] | slot);
+                vector[bucket] |= slot;
+            }
         }
 
         public bool Test(T key)
         {
-            int hash = hashProvider.GetHashCode(key);
-            
-            int bucket = hash / 8;
-            byte slot = (byte) (hash * 8);
-            
-            return (vector[bucket] & slot) != 0;
+            ulong[] hash = hashProvider.GetHashCodes(GetBytes(key), hashTransformCount, size);
+
+            for (int i = 0; i < hash.Length; i++)
+            {
+                ulong bucket = hash[i] / bucketSize;
+                byte slot = (byte)(1 << (int)(hash[i] % bucketSize));
+
+                if ((vector[bucket] & slot) == 0)
+                    return false;
+            }
+
+            return true;
         }
+
+        protected abstract byte[] GetBytes(T value);
     }
 }

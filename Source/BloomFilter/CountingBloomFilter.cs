@@ -8,11 +8,10 @@ namespace BloomFilter
 {
     public class CountingBloomFilter<T> : ICountingBloomFilter<T>
     {
-        private IHashFunctionProvider<T> hashProvider;
+        private IHashFunctionProvider hashProvider = new HashProvider();
 
-        public CountingBloomFilter(IHashFunctionProvider<T> hashProvider)
+        public CountingBloomFilter(int size, int hashTransformCount)
         {
-            this.hashProvider = hashProvider;
         }
 
         public void Delete(T item)

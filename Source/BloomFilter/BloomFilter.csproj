@@ -40,12 +40,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BloomFilter.cs" />
-    <Compile Include="BloomFilterFactory.cs" />
     <Compile Include="CountingBloomFilter.cs" />
+    <Compile Include="HashProvider.cs" />
     <Compile Include="IBloomFilter.cs" />
     <Compile Include="ICountingBloomFilter.cs" />
     <Compile Include="IHashFunctionProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StringBloomFilter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
